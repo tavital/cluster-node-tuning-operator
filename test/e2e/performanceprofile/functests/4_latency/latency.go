@@ -218,6 +218,11 @@ var _ = Describe("[performance] Latency Test", Ordered, func() {
 		BeforeEach(func() {
 			maximumLatency, err = getMaximumLatency(testName)
 			Expect(err).ToNot(HaveOccurred())
+
+			// The hwlatdetect test requires LATENCY_TEST_CPUS to be set.
+			if _, ok := os.LookupEnv("LATENCY_TEST_CPUS"); !ok {
+				Fail("LATENCY_TEST_CPUS must be set for the hwlatdetect test")
+			}
 		})
 
 		It("should succeed", func() {

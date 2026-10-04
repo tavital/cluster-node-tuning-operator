@@ -123,4 +123,5 @@ You can run the container with different ENV variables, but the bare minimum is 
 - `OSLAT_MAXIMUM_LATENCY` the expected maximum latency for all buckets in us in the oslat test.
 - `CYCLICTEST_MAXIMUM_LATENCY` the expected maximum latency for the cyclictest test.
 - `HWLATDETECT_MAXIMUM_LATENCY` the expected maximum latency for the hwlatdetect test.
+- `HWLATDETECT_TARGET_ALL_CPUS` when set, it is forwarded to the test-pod so that hwlatdetect targets all node CPUs instead of only the CPUs assigned to the test-pod.
 - `MAXIMUM_LATENCY` a unified value for the expected maximum latency for all tests (In case both provided, the specific variables will have precedence over the unified one).

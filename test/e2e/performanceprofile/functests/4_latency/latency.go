@@ -414,6 +414,15 @@ func getLatencyTestPod(profile *performancev2.PerformanceProfile, node *corev1.N
 		latencyTestRunnerArgs = append(latencyTestRunnerArgs, fmt.Sprintf("-%s-start-delay=%d", testName, latencyTestDelay))
 	}
 
+	// If cnf-tests was invoked with the HWLATDETECT_TARGET_ALL_CPUS environment variable,
+	// forward it to the hwlatdetect runner pod so the runner can act on it.
+	var runnerEnv []corev1.EnvVar
+	if testName == hwlatdetectTestName {
+		if val, ok := os.LookupEnv("HWLATDETECT_TARGET_ALL_CPUS"); ok {
+			runnerEnv = append(runnerEnv, corev1.EnvVar{Name: "HWLATDETECT_TARGET_ALL_CPUS", Value: val})
+		}
+	}
+
 	volumeTypeDirectory := corev1.HostPathDirectory
 	return &corev1.Pod{
 		ObjectMeta: metav1.ObjectMeta{
@@ -436,6 +445,7 @@ func getLatencyTestPod(profile *performancev2.PerformanceProfile, node *corev1.N
 						runnerPath,
 					},
 					Args: latencyTestRunnerArgs,
+					Env:  runnerEnv,
 					Resources: corev1.ResourceRequirements{
 						Limits: corev1.ResourceList{
 							corev1.ResourceCPU:    resource.MustParse(strconv.Itoa(latencyTestCpus)),

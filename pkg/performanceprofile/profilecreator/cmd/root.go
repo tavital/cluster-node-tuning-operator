@@ -218,8 +218,9 @@ func validateProfileCreatorFlags(pcArgs *ProfileCreatorArgs) error {
 	if err := validateFlag("topology-manager-policy", pcArgs.TMPolicy, validTMPolicyValues); err != nil {
 		return fmt.Errorf("invalid value for topology-manager-policy flag specified: %w", err)
 	}
-	if pcArgs.TMPolicy == kubeletconfig.SingleNumaNodeTopologyManagerPolicy && pcArgs.SplitReservedCPUsAcrossNUMA {
-		return fmt.Errorf("not appropriate to split reserved CPUs in case of topology-manager-policy: %s", pcArgs.TMPolicy)
+	if pcArgs.TMPolicy == kubeletconfig.SingleNumaNodeTopologyManagerPolicy && !pcArgs.SplitReservedCPUsAcrossNUMA {
+		// Splitting reserved CPUs across NUMA nodes is enabled by default and is usually desirable for single-numa-node.
+		Alert("Warning: consider setting --split-reserved-cpus-across-numa=true when using --topology-manager-policy=%s. Reserved CPUs should be split across NUMA node.", pcArgs.TMPolicy)
 	}
 	if err := validateFlag("power-consumption-mode", pcArgs.PowerConsumptionMode, validPowerConsumptionModes); err != nil {
 		return fmt.Errorf("invalid value for power-consumption-mode flag specified: %w", err)
@@ -434,7 +435,7 @@ func (pca *ProfileCreatorArgs) AddFlags(flags *pflag.FlagSet) {
 	flags.IntVar(&pca.ReservedCPUCount, "reserved-cpu-count", 0, "Number of reserved CPUs (required)")
 	flags.IntVar(&pca.OfflinedCPUCount, "offlined-cpu-count", 0, "Number of offlined CPUs")
 	flags.IntVar(&pca.OvsDpdkCPUCount, "ovs-dpdk-cpu-count", 0, "Number of OVS-DPDK CPUs")
-	flags.BoolVar(&pca.SplitReservedCPUsAcrossNUMA, "split-reserved-cpus-across-numa", false, "Split the Reserved CPUs across NUMA nodes")
+	flags.BoolVar(&pca.SplitReservedCPUsAcrossNUMA, "split-reserved-cpus-across-numa", true, "Split the Reserved CPUs across NUMA nodes")
 	flags.StringVar(&pca.MCPName, "mcp-name", "", "MCP name corresponding to the target machines (required)")
 	flags.BoolVar(&pca.DisableHT, "disable-ht", false, "Disable Hyperthreading")
 	flags.BoolVar(&pca.RTKernel, "rt-kernel", false, "Enable Real Time Kernel (required)")

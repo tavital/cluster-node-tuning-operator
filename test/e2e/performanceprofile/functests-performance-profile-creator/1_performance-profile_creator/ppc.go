@@ -143,17 +143,29 @@ var _ = Describe("[rfe_id:OCP-38968][ppc] Performance Profile Creator", func() {
 			Expect(ppcErrorString).To(ContainSubstring("can't allocate odd number of CPUs from a NUMA Node"))
 		})
 
-		It("[test_id:41405] Verify PPC fails when splitting of reserved cpus and single numa-node policy is specified", func() {
+		It("[test_id:41405] Verify PPC splits reserved cpus across NUMA nodes by default with single numa-node policy", func() {
+			// --split-reserved-cpus-across-numa defaults to true, so it is not passed explicitly.
 			ppcArgs := []string{
-				fmt.Sprintf("--reserved-cpu-count=%d", 2),
-				fmt.Sprintf("--split-reserved-cpus-across-numa=%t", true),
+				fmt.Sprintf("--reserved-cpu-count=%d", 4),
 				fmt.Sprintf("--topology-manager-policy=%s", "single-numa-node"),
 				"--rt-kernel=false",
 			}
 			cmdArgs := append(defaultArgs, ppcArgs...)
-			_, errData, _ := testutils.ExecAndLogCommandWithStderr(ppcPath, cmdArgs...)
-			ppcErrorString := errorStringParser(errData)
-			Expect(ppcErrorString).To(ContainSubstring("not appropriate to split reserved CPUs in case of topology-manager-policy: single-numa-node"))
+			_, err := testutils.ExecAndLogCommand(ppcPath, cmdArgs...)
+			Expect(err).To(BeNil())
+		})
+
+		It("Verify PPC warns when single numa-node policy is used without splitting reserved cpus across NUMA nodes", func() {
+			ppcArgs := []string{
+				fmt.Sprintf("--reserved-cpu-count=%d", 4),
+				"--split-reserved-cpus-across-numa=false",
+				fmt.Sprintf("--topology-manager-policy=%s", "single-numa-node"),
+				"--rt-kernel=false",
+			}
+			cmdArgs := append(defaultArgs, ppcArgs...)
+			_, errData, err := testutils.ExecAndLogCommandWithStderr(ppcPath, cmdArgs...)
+			Expect(err).To(BeNil())
+			Expect(string(errData)).To(ContainSubstring("consider setting --split-reserved-cpus-across-numa=true"))
 		})
 
 		It("[test_id:41420] Verify PPC fails when reserved cpu count is more than available cpus", func() {
@@ -216,17 +228,16 @@ var _ = Describe("[rfe_id:OCP-38968][ppc] Performance Profile Creator", func() {
 	})
 
 	Context("Systems with Hyperthreading disabled", func() {
-		It("[test_id:42035] verify PPC fails when splitting of reserved cpus and single numa-node policy is specified", func() {
+		It("[test_id:42035] verify PPC splits reserved cpus across NUMA nodes by default with single numa-node policy", func() {
+			// --split-reserved-cpus-across-numa defaults to true, so it is not passed explicitly.
 			ppcArgs := []string{
-				fmt.Sprintf("--reserved-cpu-count=%d", 2),
-				fmt.Sprintf("--split-reserved-cpus-across-numa=%t", true),
+				fmt.Sprintf("--reserved-cpu-count=%d", 4),
 				fmt.Sprintf("--topology-manager-policy=%s", "single-numa-node"),
 				"--rt-kernel=false",
 			}
 			cmdArgs := append(defaultArgs, ppcArgs...)
-			_, errData, _ := testutils.ExecAndLogCommandWithStderr(ppcPath, cmdArgs...)
-			ppcErrorString := errorStringParser(errData)
-			Expect(ppcErrorString).To(ContainSubstring("not appropriate to split reserved CPUs in case of topology-manager-policy: single-numa-node"))
+			_, err := testutils.ExecAndLogCommand(ppcPath, cmdArgs...)
+			Expect(err).To(BeNil())
 		})
 	})
 

@@ -104,29 +104,6 @@ var _ = Describe("[rfe_id: 38968] PerformanceProfile setup helper and platform a
 			Expect(*pp.Spec.NUMA.TopologyPolicy).To(Equal("restricted"))
 		})
 
-		It("[test_id:41405] Verify PPC script fails when the splitting of reserved cpus and single numa-node policy is specified", func() {
-			cmdArgs := []string{
-				fmt.Sprintf("%s:%s:z", mustgatherDir, mustgatherDir),
-				ntoImage,
-				fmt.Sprintf("--mcp-name=%s", mcpName),
-				"--reserved-cpu-count=2",
-				"--rt-kernel=true",
-				"--power-consumption-mode=low-latency",
-				"--split-reserved-cpus-across-numa=true",
-				"--topology-manager-policy=single-numa-node",
-				fmt.Sprintf("--must-gather-dir-path=%s", mustgatherDir),
-			}
-			podmanArgs := append(defaultArgs, cmdArgs...)
-			session, err := ppcIntgTest.PodmanAsUserBase(podmanArgs, false, false)
-			Expect(err).ToNot(HaveOccurred(), "Podman command failed")
-
-			output := session.Wait(20).Err.Contents()
-			Expect(session).Should(gexec.Exit(1))
-
-			errString := "not appropriate to split reserved CPUs in case of topology-manager-policy: single-numa-node"
-			Expect(string(output)).To(ContainSubstring(errString), "expected error:\n%q\ngot:\n%s", errString, output)
-		})
-
 		It("[test_id:41419] Verify PPC script fails when reserved cpu count is 2 and requires to split across numa nodes", func() {
 			cmdArgs := []string{
 				fmt.Sprintf("%s:%s:z", mustgatherDir, mustgatherDir),
